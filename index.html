@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cat-ion Studio · 入场动画</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0b0d15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 1rem;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16 / 6;
+      background: radial-gradient(circle at 70% 40%, #1a1e2f, #0a0c14);
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.3s;
+    }
+
+    /* 画布容器 – 相对定位，用于绝对定位动画元素 */
+    .canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ---------- 文字主体 (静态) ---------- */
+    .brand-text {
+      position: relative;
+      z-index: 5;
+      font-size: clamp(2.4rem, 12vw, 5.6rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #fff;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      opacity: 0; /* 初始隐藏，由动画控制显现 */
+      animation: revealText 1.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      animation-delay: 0.6s; /* 等待扫光划过一段后出现 */
+      transform: translateX(0);
+      white-space: nowrap;
+      padding: 0 1.5rem;
+    }
+
+    /* 文字渐显 + 微弱上浮 */
+    @keyframes revealText {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+        filter: blur(2px);
+      }
+      60% {
+        opacity: 0.7;
+        transform: translateY(-2px);
+        filter: blur(0);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    /* ---------- 扫光元素 (从右往左) ---------- */
+    .sweep {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;  /* 允许点击穿透 */
+      z-index: 10;
+      /* 利用 backdrop-filter 制造光晕，但为了更干净的“光带划过”效果，使用渐变遮罩 + 额外光晕 */
+    }
+
+    /* 主光带 — 从右往左移动，并让右侧逐渐显现文字 */
+    .sweep::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 235, 200, 0.25) 30%,
+        rgba(255, 215, 150, 0.5) 50%,
+        rgba(255, 235, 200, 0.25) 70%,
+        transparent 100%
+      );
+      /* 初始位置完全在右侧外部 */
+      transform: translateX(100%);
+      animation: sweepGlide 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation-delay: 0.1s;
+      /* 增加柔光混合 */
+      mix-blend-mode: overlay;
+      opacity: 0.9;
+      filter: blur(2px);
+    }
+
+    /* 光带扫过动画：从右往左，并且逐渐让右侧“显现” */
+    @keyframes sweepGlide {
+      0% {
+        transform: translateX(100%);
+        opacity: 0.3;
+      }
+      20% {
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-100%);
+        opacity: 0.7;
+      }
+    }
+
+    /* 第二层光晕 — 更柔和的边缘光，增加立体感 */
+    .sweep::after {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 0;
+      width: 100%;
+      height: 120%;
+      background: radial-gradient(ellipse at 80% 50%, rgba(255, 200, 120, 0.15) 0%, transparent 70%);
+      transform: translateX(100%);
+      animation: glowDrift 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation-delay: 0.15s;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    @keyframes glowDrift {
+      0% {
+        transform: translateX(100%) scale(1.2);
+        opacity: 0;
+      }
+      30% {
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateX(-120%) scale(1);
+        opacity: 0.4;
+      }
+    }
+
+    /* ---------- 额外点缀：微光粒子 (装饰) ---------- */
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #fde6c4;
+      border-radius: 50%;
+      filter: blur(1px);
+      box-shadow: 0 0 12px #ffb56b;
+      opacity: 0;
+      animation: sparkleFade 2s ease-out forwards;
+      animation-delay: 0.4s;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .sparkle:nth-child(1) {
+      top: 18%;
+      left: 15%;
+      animation-delay: 0.8s;
+      width: 8px;
+      height: 8px;
+      background: #ffe3b0;
+      box-shadow: 0 0 20px #ffa75e;
+    }
+    .sparkle:nth-child(2) {
+      top: 70%;
+      left: 30%;
+      animation-delay: 1.2s;
+      width: 4px;
+      height: 4px;
+      background: #ffdca8;
+    }
+    .sparkle:nth-child(3) {
+      top: 40%;
+      left: 80%;
+      animation-delay: 1.6s;
+      width: 10px;
+      height: 10px;
+      background: #ffdbb0;
+      filter: blur(2px);
+    }
+    .sparkle:nth-child(4) {
+      top: 85%;
+      left: 70%;
+      animation-delay: 0.9s;
+      width: 5px;
+      height: 5px;
+      background: #f5ca94;
+    }
+    .sparkle:nth-child(5) {
+      top: 25%;
+      left: 55%;
+      animation-delay: 1.4s;
+      width: 7px;
+      height: 7px;
+      background: #fad6a0;
+      box-shadow: 0 0 16px #ffb86b;
+    }
+
+    @keyframes sparkleFade {
+      0% {
+        opacity: 0;
+        transform: scale(0.6) translateY(6px);
+      }
+      30% {
+        opacity: 1;
+        transform: scale(1.2) translateY(-4px);
+      }
+      70% {
+        opacity: 0.8;
+        transform: scale(1) translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.4) translateY(-12px);
+      }
+    }
+
+    /* ---------- 底部装饰签名 (很小) ---------- */
+    .credit {
+      position: absolute;
+      bottom: 1rem;
+      right: 2rem;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      font-weight: 300;
+      z-index: 2;
+      backdrop-filter: blur(2px);
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      background: rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    /* 响应式微调 */
+    @media (max-width: 600px) {
+      .stage {
+        border-radius: 1.8rem;
+        aspect-ratio: 16 / 7;
+      }
+      .brand-text {
+        letter-spacing: 0.02em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="canvas">
+
+      <!-- 装饰光点 -->
+      <div class="sparkle"></div>
+      <div class="sparkle"></div>
+      <div class="sparkle"></div>
+      <div class="sparkle"></div>
+      <div class="sparkle"></div>
+
+      <!-- 核心文字：Cat-ion Studio -->
+      <div class="brand-text">Cat-ion Studio</div>
+
+      <!-- 扫光层 (::before / ::after 实现双层光效) -->
+      <div class="sweep"></div>
+
+      <!-- 极简署名，保持干净 -->
+      <div class="credit">✦ 入场动画</div>
+    </div>
+  </div>
+</body>
+</html>
